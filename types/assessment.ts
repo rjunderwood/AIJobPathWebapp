@@ -7,6 +7,7 @@ export interface AssessmentQuestion {
   description?: string
   required: boolean
   options?: string[]
+  suggestions?: string[] // For autocomplete
   min?: number
   max?: number
   step?: number

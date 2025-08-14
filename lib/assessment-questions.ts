@@ -1,4 +1,5 @@
 import { AssessmentQuestion } from "@/types/assessment"
+import { MAJORS, UNIVERSITIES, LEARNING_STYLES, getSkillsForMajor, getRolesForMajor } from "@/lib/constants/assessment-data"
 
 export const assessmentQuestions: AssessmentQuestion[] = [
   {
@@ -8,16 +9,18 @@ export const assessmentQuestions: AssessmentQuestion[] = [
     description: "Enter your current field of study",
     required: true,
     placeholder: "e.g., Computer Science, Business, Psychology",
-    maxLength: 100
+    maxLength: 100,
+    suggestions: MAJORS
   },
   {
     id: "university",
     type: "text-input",
-    question: "Which university do you attend?",
+    question: "Which university/college do you attend?",
     description: "This helps us understand your academic environment",
     required: true,
     placeholder: "e.g., Stanford University, UC Berkeley",
-    maxLength: 200
+    maxLength: 200,
+    suggestions: UNIVERSITIES
   },
   {
     id: "targetRole",
@@ -26,18 +29,13 @@ export const assessmentQuestions: AssessmentQuestion[] = [
     description: "Select the role you're aiming for after graduation",
     required: true,
     options: [
-      "Software Engineer",
-      "Data Scientist",
-      "Product Manager",
-      "UX/UI Designer",
-      "Marketing Manager",
-      "Financial Analyst",
-      "Consultant",
       "Business Analyst",
-      "Machine Learning Engineer",
-      "DevOps Engineer",
+      "Project Manager",
+      "Consultant",
+      "Marketing Manager",
+      "Sales Representative",
       "Other"
-    ]
+    ] // Default general roles, will be dynamically updated based on major
   },
   {
     id: "graduationYear",
@@ -61,22 +59,15 @@ export const assessmentQuestions: AssessmentQuestion[] = [
     question: "What skills do you already have?",
     description: "Select all that apply (we'll identify what's missing)",
     required: false,
-    options: [
-      "Programming (Python, Java, etc.)",
-      "Data Analysis",
-      "Machine Learning",
-      "Web Development",
-      "Mobile Development",
-      "Cloud Computing (AWS, Azure, etc.)",
-      "Database Management",
-      "Project Management",
-      "Communication & Presentation",
-      "Leadership",
-      "Design Tools (Figma, Adobe, etc.)",
-      "Statistical Analysis",
-      "Business Strategy",
-      "Financial Modeling"
-    ]
+    options: getSkillsForMajor("Other") // Default options, will be dynamically updated in AssessmentFlow
+  },
+  {
+    id: "learningStyle",
+    type: "single-select",
+    question: "How do you prefer to learn?",
+    description: "This helps us recommend the best learning resources for you",
+    required: true,
+    options: LEARNING_STYLES.map(style => style.label)
   },
   {
     id: "timeAvailability",

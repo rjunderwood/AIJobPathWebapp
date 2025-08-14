@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { AnimatePresence } from "framer-motion"
 import { ProgressIndicator } from "./ProgressIndicator"
@@ -8,6 +8,7 @@ import { QuestionCard } from "./QuestionCard"
 import { assessmentQuestions } from "@/lib/assessment-questions"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { toast } from "sonner"
+import { getRolesForMajor, getSkillsForMajor } from "@/lib/constants/assessment-data"
 
 interface AssessmentResponses {
   major?: string
@@ -25,6 +26,9 @@ export function AssessmentFlow() {
   const router = useRouter()
   const [currentStep, setCurrentStep] = useState(0)
   const [responses, setResponses] = useLocalStorage<AssessmentResponses>("assessment-responses", {})
+  
+  // Debug: Log responses whenever they change
+  console.log("Current responses:", responses)
   const [sessionId, setSessionId] = useLocalStorage("assessment-session-id", "")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -43,10 +47,39 @@ export function AssessmentFlow() {
     }
   }, [sessionId, setSessionId])
 
-  const currentQuestion = assessmentQuestions[currentStep]
-  const totalSteps = assessmentQuestions.length
+  // Dynamically update target role and skills options based on selected major
+  const dynamicQuestions = useMemo(() => {
+    console.log("Current major:", responses.major) // Debug log
+    return assessmentQuestions.map(q => {
+      if (q.id === "targetRole") {
+        // Always update targetRole options, use major if available, otherwise use "Other"
+        const majorToUse = responses.major || "Other"
+        const roles = getRolesForMajor(majorToUse)
+        console.log("Roles for major:", majorToUse, roles) // Debug log
+        return {
+          ...q,
+          options: roles
+        }
+      }
+      if (q.id === "currentSkills") {
+        // Always update skills options, use major if available, otherwise use "Other"
+        const majorToUse = responses.major || "Other"
+        const skills = getSkillsForMajor(majorToUse)
+        console.log("Skills for major:", majorToUse, skills) // Debug log
+        return {
+          ...q,
+          options: skills
+        }
+      }
+      return q
+    })
+  }, [responses.major])
+
+  const currentQuestion = dynamicQuestions[currentStep]
+  const totalSteps = dynamicQuestions.length
 
   const handleResponseChange = (value: any) => {
+    console.log("Setting response for", currentQuestion.id, "to", value) // Debug log
     setResponses({ ...responses, [currentQuestion.id]: value })
   }
 

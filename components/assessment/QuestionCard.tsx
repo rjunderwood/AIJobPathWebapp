@@ -5,6 +5,7 @@ import { AssessmentQuestion } from "@/types/assessment"
 import { SingleSelect } from "./QuestionTypes/SingleSelect"
 import { MultiSelect } from "./QuestionTypes/MultiSelect"
 import { TextInput } from "./QuestionTypes/TextInput"
+import { AutocompleteInput } from "./QuestionTypes/AutocompleteInput"
 import { RangeSlider } from "./QuestionTypes/RangeSlider"
 
 interface QuestionCardProps {
@@ -33,6 +34,15 @@ export function QuestionCard({
       case "multi-select":
         return <MultiSelect question={question} value={value} onChange={onChange} />
       case "text-input":
+        // Use AutocompleteInput if suggestions are provided
+        if (question.suggestions && question.suggestions.length > 0) {
+          return <AutocompleteInput 
+            question={question} 
+            value={value} 
+            onChange={onChange}
+            suggestions={question.suggestions} 
+          />
+        }
         return <TextInput question={question} value={value} onChange={onChange} />
       case "range-slider":
         return <RangeSlider question={question} value={value} onChange={onChange} />
