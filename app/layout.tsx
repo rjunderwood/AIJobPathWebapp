@@ -19,8 +19,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "AIJobPath",
-  description: "The easiest way to start your next project."
+  title: "AIJobPath - AI Career Gap Analysis for Students",
+  description: "Discover the exact skills you need to land your dream job. Get a personalized career roadmap with AI-powered analysis."
 }
 
 export default function RootLayout({
