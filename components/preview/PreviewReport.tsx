@@ -5,6 +5,7 @@ import { PreviewData } from "@/types/assessment"
 import { SkillGapPreview } from "./SkillGapPreview"
 import { ValueProposition } from "./ValueProposition"
 import { PurchaseCTA } from "./PurchaseCTA"
+import { ReportContentDisplay } from "./ReportContentDisplay"
 import { Target, TrendingUp, Zap } from "lucide-react"
 
 interface PreviewReportProps {
@@ -13,10 +14,14 @@ interface PreviewReportProps {
 }
 
 export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
+  
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
+
+        
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -30,6 +35,10 @@ export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
           </p>
         </motion.div>
 
+        {preview.contentPreview && (
+          <ReportContentDisplay content={preview.contentPreview} />
+        )}
+
         {/* Quick Stats */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -42,7 +51,7 @@ export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
               <Target className="w-6 h-6 text-blue-600" />
             </div>
             <div className="text-3xl font-bold text-gray-900 mb-1">
-              {preview.overallReadiness}%
+              {preview.overallReadiness || 0}%
             </div>
             <p className="text-gray-600">Career Readiness</p>
           </div>
@@ -52,7 +61,7 @@ export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
               <TrendingUp className="w-6 h-6 text-purple-600" />
             </div>
             <div className="text-3xl font-bold text-gray-900 mb-1">
-              {preview.estimatedTimeToReady}
+              {preview.estimatedTimeToReady || "N/A"}
             </div>
             <p className="text-gray-600">Time to Job-Ready</p>
           </div>
@@ -62,7 +71,7 @@ export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
               <Zap className="w-6 h-6 text-green-600" />
             </div>
             <div className="text-3xl font-bold text-gray-900 mb-1">
-              {preview.topGaps.length}
+              {preview.topGaps?.length || 0}
             </div>
             <p className="text-gray-600">Critical Gaps Found</p>
           </div>
@@ -76,7 +85,7 @@ export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
           className="bg-blue-50 rounded-xl p-6 mb-12 border-2 border-blue-200"
         >
           <h3 className="font-bold text-gray-900 mb-2">Market Insight</h3>
-          <p className="text-gray-700">{preview.marketInsight}</p>
+          <p className="text-gray-700">{preview.marketInsight || "Market analysis is being generated..."}</p>
         </motion.div>
 
         {/* Quick Win */}
@@ -87,7 +96,7 @@ export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
           className="bg-green-50 rounded-xl p-6 mb-12 border-2 border-green-200"
         >
           <h3 className="font-bold text-gray-900 mb-2">Quick Win - Start Today!</h3>
-          <p className="text-gray-700">{preview.quickWin}</p>
+          <p className="text-gray-700">{preview.quickWin || "Your personalized quick win is being generated..."}</p>
         </motion.div>
 
         {/* Top 3 Skill Gaps */}
@@ -96,9 +105,13 @@ export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
             Your Top 3 Skill Gaps
           </h2>
           <div className="grid md:grid-cols-3 gap-6">
-            {preview.topGaps.map((gap, index) => (
+            {preview.topGaps?.map((gap, index) => (
               <SkillGapPreview key={gap.skill} gap={gap} index={index} />
-            ))}
+            )) || (
+              <div className="col-span-3 text-center text-gray-600 py-8">
+                Your skill gap analysis is being generated...
+              </div>
+            )}
           </div>
         </div>
 

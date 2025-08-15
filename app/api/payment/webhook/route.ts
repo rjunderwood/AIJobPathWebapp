@@ -86,20 +86,13 @@ export async function POST(request: NextRequest) {
           if (assessmentSession) {
             const { data: assessmentResponse } = await supabase
               .from('assessment_responses')
-              .select('id')
-              .eq('session_id', assessmentSession.id)
+              .select('*')
+              .eq('session_id', assessmentSession?.id || '')
               .single()
             
             if (assessmentResponse) {
-              await supabase.from('reports').insert({
-                user_id: userId,
-                response_id: assessmentResponse.id,
-                status: 'generating',
-              } as any)
-              
-              // Trigger report generation (could be a background job)
-              // For now, we'll handle it synchronously
-              await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/report/generate`, {
+              // Trigger premium report generation
+              await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/report/premium/generate`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -107,6 +100,8 @@ export async function POST(request: NextRequest) {
                   responseId: assessmentResponse.id,
                 }),
               })
+              
+              // Premium prompts generation is triggered automatically by the report generation
             }
           }
         }

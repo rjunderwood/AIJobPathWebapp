@@ -1,4 +1,8 @@
-export type QuestionType = "single-select" | "multi-select" | "text-input" | "range-slider"
+export type QuestionType =
+  | "single-select"
+  | "multi-select"
+  | "text-input"
+  | "range-slider"
 
 export interface AssessmentQuestion {
   id: string
@@ -51,6 +55,7 @@ export interface PreviewData {
   estimatedTimeToReady: string // e.g., "6-9 months"
   quickWin: string // One actionable item they can do today
   marketInsight: string // Brief market insight about their role
+  contentPreview: string // 30% of the report content for preview
 }
 
 export interface FullReport {

@@ -23,10 +23,22 @@ function SubmitButton() {
   )
 }
 
-export default function SignUpPage() {
+export default function SignUpPage({ 
+  searchParams 
+}: { 
+  searchParams: { session?: string; redirect?: string } 
+}) {
   const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(formData: FormData) {
+    // Add redirect info to form data if present
+    if (searchParams.redirect) {
+      formData.append('redirect', searchParams.redirect)
+    }
+    if (searchParams.session) {
+      formData.append('sessionId', searchParams.session)
+    }
+    
     const result = await signUp(formData)
     if (result?.error) {
       setError(result.error)
@@ -51,7 +63,10 @@ export default function SignUpPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
             >
-              Build your next big idea
+              {searchParams.session 
+                ? "Unlock Your Complete Career Report"
+                : "Build your next big idea"
+              }
             </motion.h1>
             <motion.p
               className="text-muted-foreground text-lg"
@@ -59,8 +74,10 @@ export default function SignUpPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              Get instant access to a production-ready app template with
-              everything you need to launch quickly.
+              {searchParams.session
+                ? "Sign up free to reveal your full skill gap analysis and get AI prompts that accelerate your career."
+                : "Get instant access to a production-ready app template with everything you need to launch quickly."
+              }
             </motion.p>
           </div>
 

@@ -20,6 +20,7 @@ export default function PreviewPage() {
     }
 
     fetchPreview()
+    
   }, [sessionId])
 
   const fetchPreview = async () => {

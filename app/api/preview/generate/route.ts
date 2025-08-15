@@ -1,100 +1,188 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/admin'
-import { getOpenAIClient } from '@/lib/openai/client'
-import { kv } from '@/lib/cloudflare/kv'
-import { generatePreviewPrompt } from '@/lib/openai/prompts'
+import { NextRequest, NextResponse } from "next/server"
+import { createClient } from "@/lib/supabase/admin"
+import { kv } from "@/lib/cloudflare/kv"
 
-export const runtime = 'edge'
+export const runtime = "edge"
 
 export async function POST(request: NextRequest) {
   try {
     const { sessionId } = await request.json()
-    
-    // Check KV cache first
-    const cached = await kv.get(`preview:${sessionId}`)
-    if (cached) {
-      return NextResponse.json(JSON.parse(cached))
-    }
-    
-    // Get assessment from cache or database
-    let assessmentData = await kv.get(`assessment:${sessionId}`)
-    
-    if (!assessmentData) {
-      const supabase = createClient()
-      const { data, error } = await supabase
-        .from('assessment_responses')
-        .select('*')
-        .eq('session_id', sessionId)
-        .single()
-      
-      if (error || !data) {
-        return NextResponse.json(
-          { error: 'Assessment not found' },
-          { status: 404 }
-        )
-      }
-      assessmentData = JSON.stringify(data)
-    }
-    
-    const responses = JSON.parse(assessmentData)
-    
-    // Generate preview with OpenAI
-    const openai = getOpenAIClient()
-    const startTime = Date.now()
-    
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
-      messages: [
-        {
-          role: 'system',
-          content: generatePreviewPrompt()
-        },
-        {
-          role: 'user',
-          content: `
-          Student Profile:
-          - Major: ${responses.major}
-          - Target Role: ${responses.target_role}
-          - University: ${responses.university}
-          - Graduation: ${responses.graduation_year}
-          - Current Skills: ${responses.current_skills?.join(', ') || 'None specified'}
-          - Time Available: ${responses.time_availability}
-          - Career Concern: ${responses.career_concerns || 'Not specified'}
-          `
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 1000,
-      response_format: { type: 'json_object' }
-    })
-    
-    const previewData = JSON.parse(completion.choices[0].message.content || '{}')
-    const generationTime = Date.now() - startTime
-    
-    // Save to database
+
     const supabase = createClient()
-    await supabase.from('previews').insert({
-      session_id: sessionId,
-      response_id: responses.id,
-      preview_data: previewData,
-      ai_tokens_used: completion.usage?.total_tokens,
-      generation_time_ms: generationTime
-    })
-    
-    // Cache the preview
-    await kv.put(
-      `preview:${sessionId}`,
-      JSON.stringify(previewData),
-      { expirationTtl: 86400 } // 24 hour cache
+
+    // Get assessment session
+    const { data: session, error: sessionError } = await supabase
+      .from("assessment_sessions")
+      .select("id")
+      .eq("session_id", sessionId)
+      .single()
+
+    if (sessionError || !session) {
+      return NextResponse.json({ error: "Session not found" }, { status: 404 })
+    }
+
+    // Get assessment response
+    const { data: assessmentResponse, error: responseError } = await supabase
+      .from("assessment_responses")
+      .select("*")
+      .eq("session_id", session?.id || "")
+      .single()
+
+    if (responseError || !assessmentResponse) {
+      console.error(
+        "Assessment response not found for sessionId:",
+        sessionId,
+        "Error:",
+        responseError
+      )
+      return NextResponse.json(
+        { error: "Assessment response not found" },
+        { status: 404 }
+      )
+    }
+
+    // Check if free report exists for this major
+    const { data: freeReport } = await supabase
+      .from("free_reports")
+      .select("*")
+      .eq("major", assessmentResponse?.major || "")
+      .single()
+
+    if (freeReport) {
+      // Parse report data to extract preview info
+      const previewData = extractPreviewFromReport(freeReport.report_data)
+      console.log("Returning cached preview data:", previewData)
+      return NextResponse.json(previewData)
+    }
+
+    // If no report exists yet, trigger generation
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/report/free/generate`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sessionId,
+          major: assessmentResponse.major
+        })
+      }
     )
-    
+
+    if (!response.ok) {
+      throw new Error("Failed to generate report")
+    }
+
+    const reportResult = await response.json()
+
+    // Parse newly generated report
+    const previewData = extractPreviewFromReport(reportResult.report)
     return NextResponse.json(previewData)
-    
   } catch (error) {
-    console.error('Preview generation error:', error)
+    console.error("Preview generation error:", error)
     return NextResponse.json(
-      { error: 'Failed to generate preview' },
+      { error: "Failed to generate preview" },
       { status: 500 }
     )
+  }
+}
+
+function extractPreviewFromReport(reportData: any): any {
+  try {
+    // Handle both old structure (with content) and new structure
+    const content = reportData?.content || ""
+
+    console.log("Content for preview extraction:", content)
+    if (!content) {
+      // Return fallback data if no content
+      return {
+        topGaps: [],
+        overallReadiness: 0,
+        estimatedTimeToReady: "Analysis pending",
+        quickWin:
+          "Complete your assessment to get personalized recommendations",
+        marketInsight: "Market analysis is being generated for your major"
+      }
+    }
+
+    // Parse the markdown content to extract key metrics
+    const automationRiskMatch = content.match(
+      /Automation Risk Score:\s*(\d+)\/10/i
+    )
+    const automationRisk = automationRiskMatch
+      ? parseInt(automationRiskMatch[1])
+      : 5
+
+    // Calculate overall readiness (inverse of automation risk + adjustments)
+    const overallReadiness = Math.min(
+      100,
+      Math.max(0, (10 - automationRisk) * 10 + 20)
+    )
+
+    // Extract time estimates
+    const timelineMatch = content.match(
+      /Timeline to Major Disruption:\s*([^\\n]*)/i
+    )
+    const timeToReady = timelineMatch
+      ? `${Math.ceil(12 - automationRisk)} months`
+      : "6-12 months"
+
+    // Extract skills from technical gaps section
+    const skillsMatches = content.match(
+      /<technical_gaps>([\s\S]*?)<\/technical_gaps>/i
+    )
+    const topGaps = []
+
+    if (skillsMatches) {
+      const skillsText = skillsMatches[1]
+      const skillLines = skillsText.match(/- \[([^\]]+)\]:/g) || []
+
+      for (let i = 0; i < Math.min(3, skillLines.length); i++) {
+        const skillMatch = skillLines[i].match(/- \[([^\]]+)\]:/)
+        if (skillMatch) {
+          topGaps.push({
+            skill: skillMatch[1],
+            importance: i === 0 ? "critical" : i === 1 ? "high" : "medium",
+            currentLevel: 2 + i,
+            requiredLevel: 8 - i,
+            timeToLearn: `${2 + i}-${3 + i} months`,
+            description: `Essential skill for ${reportData.major || "your field"}`,
+            resources: []
+          })
+        }
+      }
+    }
+
+    // Extract market insight
+    const salaryMatch = content.match(/50th percentile:\s*\$([0-9,]+)/i)
+    const salary = salaryMatch ? salaryMatch[1] : "55,000"
+
+    const marketInsight = `Current market analysis shows entry-level positions at $${salary} median salary with growing demand for specialized skills.`
+
+    // Extract quick win from 48-hour actions
+    const quickWinMatch = content.match(
+      /\*\*🎯 Next 48 Hours[^*]*\*\*[^1]*1\.\s*([^\\n]*)/i
+    )
+    const quickWin = quickWinMatch
+      ? quickWinMatch[1].replace(/\[|\]/g, "")
+      : "Start building your first portfolio project today"
+
+    return {
+      topGaps,
+      overallReadiness,
+      estimatedTimeToReady: timeToReady,
+      quickWin,
+      marketInsight,
+      contentPreview: content.slice(0, Math.floor(content.length * 0.10))
+    }
+  } catch (error) {
+    console.error("Error extracting preview data:", error)
+    // Return safe fallback
+    return {
+      topGaps: [],
+      overallReadiness: 50,
+      estimatedTimeToReady: "6-12 months",
+      quickWin: "Complete your assessment to get personalized recommendations",
+      marketInsight: "Market analysis is being generated for your major"
+    }
   }
 }
