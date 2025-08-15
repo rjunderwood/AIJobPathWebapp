@@ -107,9 +107,9 @@ export async function POST(request: NextRequest) {
         }))
       })
       
-    } catch (apiError) {
+    } catch (apiError: any) {
       console.error('OpenAI API Error:', apiError)
-      throw new Error(`OpenAI API failed: ${apiError.message}`)
+      throw new Error(`OpenAI API failed: ${apiError?.message || 'Unknown error'}`)
     }
     
     if (!completion.choices || completion.choices.length === 0) {
@@ -136,7 +136,8 @@ export async function POST(request: NextRequest) {
       console.error('Empty content received from OpenAI - this may be due to reasoning model hitting token limit')
       
       // Check if this is a reasoning model that hit the limit
-      if (completion.usage?.completion_tokens_details?.reasoning_tokens > 0 && 
+      if (completion.usage?.completion_tokens_details?.reasoning_tokens && 
+          completion.usage.completion_tokens_details.reasoning_tokens > 0 && 
           completion.choices[0].finish_reason === 'length') {
         throw new Error('Reasoning model hit token limit - increase max_completion_tokens or use different model')
       }

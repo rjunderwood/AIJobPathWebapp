@@ -104,9 +104,9 @@ function extractPreviewFromReport(reportData: any): any {
       }
     }
 
-    // Parse the markdown content to extract key metrics
+    // Parse markdown content to extract key metrics
     const automationRiskMatch = content.match(
-      /Automation Risk Score:\s*(\d+)\/10/i
+      /### Automation Risk Score:\s*(\d+)\/10/i
     )
     const automationRisk = automationRiskMatch
       ? parseInt(automationRiskMatch[1])
@@ -118,49 +118,56 @@ function extractPreviewFromReport(reportData: any): any {
       Math.max(0, (10 - automationRisk) * 10 + 20)
     )
 
-    // Extract time estimates
+    // Extract time estimates from timeline section
     const timelineMatch = content.match(
-      /Timeline to Major Disruption:\s*([^\\n]*)/i
+      /### Timeline to Major Disruption[\s\S]*?- \*\*(\d+)-(\d+) months/i
     )
     const timeToReady = timelineMatch
       ? `${Math.ceil(12 - automationRisk)} months`
       : "6-12 months"
 
-    // Extract skills from technical gaps section
-    const skillsMatches = content.match(
-      /<technical_gaps>([\s\S]*?)<\/technical_gaps>/i
+    // Extract skills from Technical Skills Gap table
+    const skillsTableMatch = content.match(
+      /### Technical Skills Gap[\s\S]*?\| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \|/i
     )
     const topGaps = []
 
-    if (skillsMatches) {
-      const skillsText = skillsMatches[1]
-      const skillLines = skillsText.match(/- \[([^\]]+)\]:/g) || []
+    // Look for skill lines in the table or list format
+    const skillLines = content.match(/\| \[([^\]]+)\] \|/g) || 
+                      content.match(/\*\*\[([^\]]+)\]\*\*/g) ||
+                      content.match(/- \*\*([^*]+)\*\*/g) || []
 
-      for (let i = 0; i < Math.min(3, skillLines.length); i++) {
-        const skillMatch = skillLines[i].match(/- \[([^\]]+)\]:/)
-        if (skillMatch) {
-          topGaps.push({
-            skill: skillMatch[1],
-            importance: i === 0 ? "critical" : i === 1 ? "high" : "medium",
-            currentLevel: 2 + i,
-            requiredLevel: 8 - i,
-            timeToLearn: `${2 + i}-${3 + i} months`,
-            description: `Essential skill for ${reportData.major || "your field"}`,
-            resources: []
-          })
-        }
+    for (let i = 0; i < Math.min(3, skillLines.length); i++) {
+      const skillMatch = skillLines[i].match(/\[([^\]]+)\]/) || 
+                        skillLines[i].match(/\*\*([^*]+)\*\*/)
+      if (skillMatch) {
+        topGaps.push({
+          skill: skillMatch[1],
+          importance: i === 0 ? "critical" : i === 1 ? "high" : "medium",
+          currentLevel: 2 + i,
+          requiredLevel: 8 - i,
+          timeToLearn: `${2 + i}-${3 + i} months`,
+          description: `Essential skill for ${reportData.major || "your field"}`,
+          resources: []
+        })
       }
     }
 
-    // Extract market insight
-    const salaryMatch = content.match(/50th percentile:\s*\$([0-9,]+)/i)
-    const salary = salaryMatch ? salaryMatch[1] : "55,000"
+    // Extract market insight from salary table
+    const salaryTableMatch = content.match(
+      /\| 50th \| \$([0-9,]+) \|/i
+    ) || content.match(
+      /50th.*?\$([0-9,]+)/i
+    )
+    const salary = salaryTableMatch ? salaryTableMatch[1] : "55,000"
 
     const marketInsight = `Current market analysis shows entry-level positions at $${salary} median salary with growing demand for specialized skills.`
 
-    // Extract quick win from 48-hour actions
+    // Extract quick win from Next 48 Hours section
     const quickWinMatch = content.match(
-      /\*\*🎯 Next 48 Hours[^*]*\*\*[^1]*1\.\s*([^\\n]*)/i
+      /## 🎯 Next 48 Hours[\s\S]*?1\.\s*\*\*([^*]+)\*\*/i
+    ) || content.match(
+      /### Next 48 Hours[\s\S]*?1\.\s*([^\n]*)/i
     )
     const quickWin = quickWinMatch
       ? quickWinMatch[1].replace(/\[|\]/g, "")
