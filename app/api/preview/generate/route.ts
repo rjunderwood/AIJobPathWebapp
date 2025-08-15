@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     if (freeReport) {
       // Parse report data to extract preview info
-      const previewData = extractPreviewFromReport(freeReport.report_data)
+      const previewData = extractPreviewFromReport(freeReport.report_data as { content?: string; major?: string })
       console.log("Returning cached preview data:", previewData)
       return NextResponse.json(previewData)
     }
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     const reportResult = await response.json()
 
     // Parse newly generated report
-    const previewData = extractPreviewFromReport(reportResult.report)
+    const previewData = extractPreviewFromReport(reportResult.report as { content?: string; major?: string })
     return NextResponse.json(previewData)
   } catch (error) {
     console.error("Preview generation error:", error)
@@ -86,7 +86,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function extractPreviewFromReport(reportData: any): any {
+function extractPreviewFromReport(reportData: { content?: string; major?: string }): {
+  topGaps: any[]
+  aiRiskLevel: "Low" | "Medium" | "High"
+  aiRiskScore: number
+  marketDemand: "Growing" | "Stable" | "Declining"
+  topSkillsCount: number
+  quickWin: string
+  marketInsight: string
+  contentPreview: string
+} {
   try {
     // Handle both old structure (with content) and new structure
     const content = reportData?.content || ""
@@ -96,15 +105,18 @@ function extractPreviewFromReport(reportData: any): any {
       // Return fallback data if no content
       return {
         topGaps: [],
-        overallReadiness: 0,
-        estimatedTimeToReady: "Analysis pending",
+        aiRiskLevel: "Medium" as const,
+        aiRiskScore: 5,
+        marketDemand: "Stable" as const,
+        topSkillsCount: 0,
         quickWin:
           "Complete your assessment to get personalized recommendations",
-        marketInsight: "Market analysis is being generated for your major"
+        marketInsight: "Market analysis is being generated for your major",
+        contentPreview: ""
       }
     }
 
-    // Parse markdown content to extract key metrics
+    // Extract automation risk score
     const automationRiskMatch = content.match(
       /### Automation Risk Score:\s*(\d+)\/10/i
     )
@@ -112,37 +124,44 @@ function extractPreviewFromReport(reportData: any): any {
       ? parseInt(automationRiskMatch[1])
       : 5
 
-    // Calculate overall readiness (inverse of automation risk + adjustments)
-    const overallReadiness = Math.min(
-      100,
-      Math.max(0, (10 - automationRisk) * 10 + 20)
-    )
+    // Convert automation risk to clear AI risk level
+    let aiRiskLevel: "Low" | "Medium" | "High"
+    if (automationRisk <= 3) {
+      aiRiskLevel = "Low"
+    } else if (automationRisk <= 6) {
+      aiRiskLevel = "Medium"
+    } else {
+      aiRiskLevel = "High"
+    }
 
-    // Extract time estimates from timeline section
-    const timelineMatch = content.match(
-      /### Timeline to Major Disruption[\s\S]*?- \*\*(\d+)-(\d+) months/i
-    )
-    const timeToReady = timelineMatch
-      ? `${Math.ceil(12 - automationRisk)} months`
-      : "6-12 months"
+    // Extract market demand from market analysis sections
+    const marketDemandKeywords = {
+      growing: /growing|increasing|rising|expanding|strong.*demand|high.*demand|boom/i,
+      declining: /declining|decreasing|falling|shrinking|weak.*demand|low.*demand|recession/i
+    }
+    
+    let marketDemand: "Growing" | "Stable" | "Declining" = "Stable"
+    if (marketDemandKeywords.growing.test(content)) {
+      marketDemand = "Growing"
+    } else if (marketDemandKeywords.declining.test(content)) {
+      marketDemand = "Declining"
+    }
 
-    // Extract skills from Technical Skills Gap table
-    const skillsTableMatch = content.match(
-      /### Technical Skills Gap[\s\S]*?\| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \|/i
-    )
+    // Extract skills from Technical Skills Gap table or similar sections
     const topGaps = []
-
-    // Look for skill lines in the table or list format
+    
+    // Look for skill lines in various formats
     const skillLines = content.match(/\| \[([^\]]+)\] \|/g) || 
                       content.match(/\*\*\[([^\]]+)\]\*\*/g) ||
-                      content.match(/- \*\*([^*]+)\*\*/g) || []
+                      content.match(/- \*\*([^*]+)\*\*/g) ||
+                      content.match(/\d+\.\s*\*\*([^*]+)\*\*/g) || []
 
     for (let i = 0; i < Math.min(3, skillLines.length); i++) {
       const skillMatch = skillLines[i].match(/\[([^\]]+)\]/) || 
                         skillLines[i].match(/\*\*([^*]+)\*\*/)
       if (skillMatch) {
         topGaps.push({
-          skill: skillMatch[1],
+          skill: skillMatch[1].trim(),
           importance: i === 0 ? "critical" : i === 1 ? "high" : "medium",
           currentLevel: 2 + i,
           requiredLevel: 8 - i,
@@ -153,7 +172,12 @@ function extractPreviewFromReport(reportData: any): any {
       }
     }
 
-    // Extract market insight from salary table
+    // Count total skills mentioned in technical skills section
+    const technicalSkillsSection = content.match(/## 🎯 Critical Skills[\s\S]*?(?=##|$)/i)?.[0] || ""
+    const allSkillMatches = technicalSkillsSection.match(/\| [^|]+ \|/g) || []
+    const topSkillsCount = Math.max(allSkillMatches.length - 1, topGaps.length) // -1 to exclude header row
+
+    // Extract market insight from salary table or market sections
     const salaryTableMatch = content.match(
       /\| 50th \| \$([0-9,]+) \|/i
     ) || content.match(
@@ -161,22 +185,26 @@ function extractPreviewFromReport(reportData: any): any {
     )
     const salary = salaryTableMatch ? salaryTableMatch[1] : "55,000"
 
-    const marketInsight = `Current market analysis shows entry-level positions at $${salary} median salary with growing demand for specialized skills.`
+    const marketInsight = `Market analysis for ${reportData.major || "this major"} shows $${salary} median entry-level salary with ${marketDemand.toLowerCase()} demand trends.`
 
     // Extract quick win from Next 48 Hours section
     const quickWinMatch = content.match(
       /## 🎯 Next 48 Hours[\s\S]*?1\.\s*\*\*([^*]+)\*\*/i
     ) || content.match(
       /### Next 48 Hours[\s\S]*?1\.\s*([^\n]*)/i
+    ) || content.match(
+      /1\.\s*\*\*([^*]+)\*\*/i
     )
     const quickWin = quickWinMatch
-      ? quickWinMatch[1].replace(/\[|\]/g, "")
+      ? quickWinMatch[1].replace(/\[|\]/g, "").trim()
       : "Start building your first portfolio project today"
 
     return {
       topGaps,
-      overallReadiness,
-      estimatedTimeToReady: timeToReady,
+      aiRiskLevel,
+      aiRiskScore: automationRisk,
+      marketDemand,
+      topSkillsCount,
       quickWin,
       marketInsight,
       contentPreview: content.slice(0, Math.floor(content.length * 0.10))
@@ -186,10 +214,13 @@ function extractPreviewFromReport(reportData: any): any {
     // Return safe fallback
     return {
       topGaps: [],
-      overallReadiness: 50,
-      estimatedTimeToReady: "6-12 months",
+      aiRiskLevel: "Medium" as const,
+      aiRiskScore: 5,
+      marketDemand: "Stable" as const,
+      topSkillsCount: 3,
       quickWin: "Complete your assessment to get personalized recommendations",
-      marketInsight: "Market analysis is being generated for your major"
+      marketInsight: "Market analysis is being generated for your major",
+      contentPreview: ""
     }
   }
 }

@@ -51,8 +51,10 @@ export interface SkillGap {
 
 export interface PreviewData {
   topGaps: SkillGap[] // Top 3 gaps
-  overallReadiness: number // 0-100
-  estimatedTimeToReady: string // e.g., "6-9 months"
+  aiRiskLevel: "Low" | "Medium" | "High" // How likely AI will disrupt this major
+  aiRiskScore: number // 0-10 for display purposes
+  marketDemand: "Growing" | "Stable" | "Declining" // Job market trend
+  topSkillsCount: number // Number of critical skills needed
   quickWin: string // One actionable item they can do today
   marketInsight: string // Brief market insight about their role
   contentPreview: string // 30% of the report content for preview

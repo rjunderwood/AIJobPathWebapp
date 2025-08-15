@@ -10,7 +10,7 @@ import {
   Check, 
   FileText, 
   Brain, 
-  Target,
+  CheckSquare,
   TrendingUp,
   AlertTriangle,
   Lightbulb,
@@ -87,7 +87,7 @@ export function ReportViewer({
           </Card>
           <Card className="p-4">
             <div className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-green-600" />
+              <CheckSquare className="h-5 w-5 text-green-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Skills to Master</p>
                 <p className="text-xl font-bold">{reportData.personalizedInsights.currentSkills?.length || 0}</p>
@@ -270,7 +270,7 @@ function getSectionIcon(key: string) {
   const iconMap: { [key: string]: any } = {
     ai_disruption: <Brain className="h-5 w-5 text-purple-600" />,
     salary: <DollarSign className="h-5 w-5 text-green-600" />,
-    skills: <Target className="h-5 w-5 text-blue-600" />,
+    skills: <CheckSquare className="h-5 w-5 text-blue-600" />,
     market: <TrendingUp className="h-5 w-5 text-orange-600" />,
     warnings: <AlertTriangle className="h-5 w-5 text-red-600" />,
     insider: <Lightbulb className="h-5 w-5 text-yellow-600" />,

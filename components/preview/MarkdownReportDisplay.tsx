@@ -25,6 +25,10 @@ export function MarkdownReportDisplay({ content }: MarkdownReportDisplayProps) {
       animate={{ opacity: 1, y: 0 }}
       className="bg-white rounded-xl p-8 mb-12 border border-gray-200 shadow-sm"
     >
+
+      <h1 className="text-3xl font-bold text-gray-900 mb-6 border-b-2 border-blue-200 pb-3">
+        Your Report
+      </h1>
       <div className="prose prose-gray max-w-none">
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}

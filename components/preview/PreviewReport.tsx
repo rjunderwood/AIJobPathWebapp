@@ -6,7 +6,7 @@ import { SkillGapPreview } from "./SkillGapPreview"
 import { ValueProposition } from "./ValueProposition"
 import { PurchaseCTA } from "./PurchaseCTA"
 import { MarkdownReportDisplay } from "./MarkdownReportDisplay"
-import { Target, TrendingUp, Zap } from "lucide-react"
+// import { Shield, TrendingUp, CheckSquare } from "lucide-react"
 
 interface PreviewReportProps {
   preview: PreviewData
@@ -33,11 +33,9 @@ export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
           </p>
         </motion.div>
 
-        {preview.contentPreview && (
-          <MarkdownReportDisplay content={preview.contentPreview} />
-        )}
 
-        {/* Quick Stats */}
+
+        {/* Market Analysis Stats */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -45,33 +43,69 @@ export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
           className="mb-12 grid gap-6 md:grid-cols-3"
         >
           <div className="rounded-xl border-2 border-gray-200 bg-white p-6 text-center">
-            <div className="mb-3 inline-flex rounded-full bg-blue-100 p-3">
-              <Target className="h-6 w-6 text-blue-600" />
+            <div className={`mb-3 inline-flex rounded-full p-3 ${
+              preview.aiRiskLevel === "Low" ? "bg-green-100" :
+              preview.aiRiskLevel === "Medium" ? "bg-yellow-100" : "bg-red-100"
+            }`}>
+              {/* <Shield className={`h-6 w-6 ${
+                preview.aiRiskLevel === "Low" ? "text-green-600" :
+                preview.aiRiskLevel === "Medium" ? "text-yellow-600" : "text-red-600"
+              }`} /> */}
+              <div className={`h-6 w-6 rounded border-2 flex items-center justify-center text-xs font-bold ${
+                preview.aiRiskLevel === "Low" ? "text-green-600 border-green-600" :
+                preview.aiRiskLevel === "Medium" ? "text-yellow-600 border-yellow-600" : "text-red-600 border-red-600"
+              }`}>
+                🛡️
+              </div>
             </div>
             <div className="mb-1 text-3xl font-bold text-gray-900">
-              {preview.overallReadiness || 0}%
+              {preview.aiRiskLevel}
             </div>
-            <p className="text-gray-600">Career Readiness</p>
+            <p className="text-gray-600">AI Risk Level</p>
+            <p className="text-xs text-gray-500 mt-1">
+              How likely AI will disrupt this major
+            </p>
+          </div>
+
+          <div className="rounded-xl border-2 border-gray-200 bg-white p-6 text-center">
+            <div className={`mb-3 inline-flex rounded-full p-3 ${
+              preview.marketDemand === "Growing" ? "bg-green-100" :
+              preview.marketDemand === "Stable" ? "bg-blue-100" : "bg-red-100"
+            }`}>
+              {/* <TrendingUp className={`h-6 w-6 ${
+                preview.marketDemand === "Growing" ? "text-green-600" :
+                preview.marketDemand === "Stable" ? "text-blue-600" : "text-red-600"
+              }`} /> */}
+              <div className={`h-6 w-6 flex items-center justify-center text-lg ${
+                preview.marketDemand === "Growing" ? "text-green-600" :
+                preview.marketDemand === "Stable" ? "text-blue-600" : "text-red-600"
+              }`}>
+                📈
+              </div>
+            </div>
+            <div className="mb-1 text-3xl font-bold text-gray-900">
+              {preview.marketDemand}
+            </div>
+            <p className="text-gray-600">Market Demand</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Job market trend for this major
+            </p>
           </div>
 
           <div className="rounded-xl border-2 border-gray-200 bg-white p-6 text-center">
             <div className="mb-3 inline-flex rounded-full bg-purple-100 p-3">
-              <TrendingUp className="h-6 w-6 text-purple-600" />
+              {/* <CheckSquare className="h-6 w-6 text-purple-600" /> */}
+              <div className="h-6 w-6 flex items-center justify-center text-lg text-purple-600">
+                ✅
+              </div>
             </div>
             <div className="mb-1 text-3xl font-bold text-gray-900">
-              {preview.estimatedTimeToReady || "N/A"}
+              {preview.topSkillsCount || preview.topGaps?.length || 0}
             </div>
-            <p className="text-gray-600">Time to Job-Ready</p>
-          </div>
-
-          <div className="rounded-xl border-2 border-gray-200 bg-white p-6 text-center">
-            <div className="mb-3 inline-flex rounded-full bg-green-100 p-3">
-              <Zap className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="mb-1 text-3xl font-bold text-gray-900">
-              {preview.topGaps?.length || 0}
-            </div>
-            <p className="text-gray-600">Critical Gaps Found</p>
+            <p className="text-gray-600">Critical Skills</p>
+            <p className="text-xs text-gray-500 mt-1">
+              Most important skills for this major
+            </p>
           </div>
         </motion.div>
 
@@ -88,8 +122,13 @@ export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
           </p>
         </motion.div>
 
+
+        {preview.contentPreview && (
+          <MarkdownReportDisplay content={preview.contentPreview} />
+        )}
+
         {/* Quick Win */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
@@ -102,10 +141,10 @@ export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
             {preview.quickWin ||
               "Your personalized quick win is being generated..."}
           </p>
-        </motion.div>
+        </motion.div> */}
 
         {/* Top 3 Skill Gaps */}
-        <div className="mb-12">
+        {/* <div className="mb-12">
           <h2 className="mb-6 text-2xl font-bold text-gray-900">
             Your Top 3 Skill Gaps
           </h2>
@@ -118,7 +157,7 @@ export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
               </div>
             )}
           </div>
-        </div>
+        </div> */}
 
         {/* Value Proposition and CTA */}
         <div className="grid gap-8 lg:grid-cols-2">
