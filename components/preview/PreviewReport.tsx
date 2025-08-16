@@ -20,7 +20,7 @@ export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-12 text-center"
+          className="mb-12 text-left"
         >
           <h1 className="mb-4 text-4xl font-bold text-gray-900 md:text-5xl">
             Your Career With AI Gap Analysis
@@ -129,32 +129,6 @@ export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
           />
         )}
 
-        {/* New CTA Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25 }}
-          className="mb-12 rounded-xl border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50 p-8 text-center"
-        >
-          <h3 className="mb-4 text-2xl font-bold text-gray-900">
-            Continue with an account to:
-          </h3>
-          <div className="space-y-3">
-            <div className="flex items-center justify-center gap-2">
-              <span className="text-lg">✅</span>
-              <p className="text-lg text-gray-700">
-                View Your Free Full Report + Free Valuable AI Tooling Prompts
-              </p>
-            </div>
-            <div className="text-xl font-bold text-purple-600">+</div>
-            <div className="flex items-center justify-center gap-2">
-              <span className="text-lg">🚀</span>
-              <p className="text-lg text-gray-700">
-                Unlock Your Highly Personalised Analysis Report + Advanced AI Tooling Prompts
-              </p>
-            </div>
-          </div>
-        </motion.div>
 
         {/* Quick Win */}
         {/* <motion.div
@@ -189,10 +163,10 @@ export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
         </div> */}
 
         {/* Value Proposition and CTA */}
-        <div className="grid gap-8 lg:grid-cols-2">
+        {/* <div className="grid gap-8 lg:grid-cols-2">
           <ValueProposition />
           <PurchaseCTA sessionId={sessionId} />
-        </div>
+        </div> */}
       </div>
     </div>
   )

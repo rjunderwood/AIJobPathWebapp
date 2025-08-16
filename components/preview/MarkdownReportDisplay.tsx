@@ -45,6 +45,51 @@ export function MarkdownReportDisplay({ content, readingTimeMinutes, estimatedPa
       <div className="prose prose-gray max-w-none relative">
         {/* Fade overlay */}
         <div className="absolute bottom-0 left-0 right-0 h-[48rem] bg-gradient-to-t from-white via-white/95 via-white/70 to-transparent pointer-events-none z-10" />
+        
+        {/* Floating CTA Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 w-[95%] max-w-5xl rounded-xl border-2 border-purple-200 bg-gradient-to-r from-purple-50/95 to-indigo-50/95 backdrop-blur-sm p-8 shadow-2xl z-20"
+        >
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 md:gap-8">
+            {/* Left side - Text content */}
+            <div className="flex-1 text-left">
+              <h3 className="mb-3 text-xl md:text-2xl font-bold text-gray-900">
+                Continue with an account to:
+              </h3>
+              <div className="space-y-2">
+                <div className="flex items-start gap-2">
+                  <span className="text-base md:text-lg mt-0.5">✅</span>
+                  <p className="text-base md:text-lg text-gray-700">
+                    View And Download Your <strong>Full {estimatedPages} Page Report</strong> + Your Free <strong>AI Tooling Prompts</strong> for Your Career
+                  </p>
+                </div>
+                <div className="text-lg md:text-xl font-bold text-purple-600 ml-6 md:ml-7">+</div>
+                <div className="flex items-start gap-2">
+                  <span className="text-base md:text-lg mt-0.5">🚀</span>
+                  <p className="text-base md:text-lg text-gray-700">
+                    Unlock Your Highly <strong>Personalised Analysis Report</strong> + <strong>Advanced AI Tooling Prompts</strong>
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Divider - only visible on medium screens and up */}
+            <div className="hidden md:block w-px h-28 bg-purple-300 mx-2" />
+            
+            {/* Right side - Sign in elements */}
+            <div className="flex flex-col items-center gap-3 md:w-64 lg:w-80">
+              <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 md:px-6 rounded-lg transition-colors">
+                Sign In / Sign Up
+              </button>
+              <p className="text-xs md:text-sm text-gray-600 text-center">
+                Create a free account to access your personalized career analysis
+              </p>
+            </div>
+          </div>
+        </motion.div>
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
