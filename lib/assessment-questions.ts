@@ -76,11 +76,10 @@ export const assessmentQuestions: AssessmentQuestion[] = [
     description: "Be realistic - we'll create a plan that fits your schedule",
     required: true,
     options: [
-      "Less than 5 hours/week",
-      "5-10 hours/week",
-      "10-20 hours/week",
-      "20-30 hours/week",
-      "30+ hours/week"
+      "Less than 1 hour/day",
+      "1 hour/day",
+      "2 hours/day",
+      "3 hours/day"
     ]
   },
   {
