@@ -2,11 +2,9 @@
 
 import { motion } from "framer-motion"
 import { PreviewData } from "@/types/assessment"
-import { SkillGapPreview } from "./SkillGapPreview"
 import { ValueProposition } from "./ValueProposition"
 import { PurchaseCTA } from "./PurchaseCTA"
 import { MarkdownReportDisplay } from "./MarkdownReportDisplay"
-// import { Shield, TrendingUp, CheckSquare } from "lucide-react"
 
 interface PreviewReportProps {
   preview: PreviewData
@@ -126,6 +124,33 @@ export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
         {preview.contentPreview && (
           <MarkdownReportDisplay content={preview.contentPreview} />
         )}
+
+        {/* New CTA Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="mb-12 rounded-xl border-2 border-purple-200 bg-gradient-to-r from-purple-50 to-indigo-50 p-8 text-center"
+        >
+          <h3 className="mb-4 text-2xl font-bold text-gray-900">
+            Continue with an account to:
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-lg">✅</span>
+              <p className="text-lg text-gray-700">
+                View Your Free Full Report + Free Valuable AI Tooling Prompts
+              </p>
+            </div>
+            <div className="text-xl font-bold text-purple-600">+</div>
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-lg">🚀</span>
+              <p className="text-lg text-gray-700">
+                Unlock Your Highly Personalised Analysis Report + Advanced AI Tooling Prompts
+              </p>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Quick Win */}
         {/* <motion.div
