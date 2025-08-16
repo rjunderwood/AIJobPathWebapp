@@ -7,10 +7,12 @@ import { createCustomer } from "./customers"
 export async function signIn(formData: FormData) {
   const email = formData.get("email") as string
   const password = formData.get("password") as string
+  const redirectTo = formData.get("redirect") as string
+  const sessionId = formData.get("sessionId") as string
 
   const supabase = await createClient()
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password
   })
@@ -19,7 +21,24 @@ export async function signIn(formData: FormData) {
     return { error: error.message }
   }
 
-  redirect("/dashboard")
+  // Link assessment session to user if sessionId provided
+  if (data.user && sessionId) {
+    const { data: session } = await supabase
+      .from('assessment_sessions')
+      .select('id')
+      .eq('session_id', sessionId)
+      .single()
+    
+    if (session) {
+      await supabase
+        .from('assessment_responses')
+        .update({ user_id: data.user.id })
+        .eq('session_id', session.id)
+    }
+  }
+
+  // Redirect to the specified URL or dashboard
+  redirect(redirectTo || "/dashboard")
 }
 
 export async function signUp(formData: FormData) {
@@ -27,8 +46,17 @@ export async function signUp(formData: FormData) {
   const password = formData.get("password") as string
   const firstName = formData.get("firstName") as string
   const lastName = formData.get("lastName") as string
+  const redirectTo = formData.get("redirect") as string
+  const sessionId = formData.get("sessionId") as string
 
   const supabase = await createClient()
+
+  // Build the callback URL with redirect and session parameters
+  let callbackUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/auth/callback`
+  const params = new URLSearchParams()
+  if (redirectTo) params.append('next', redirectTo)
+  if (sessionId) params.append('session', sessionId)
+  if (params.toString()) callbackUrl += `?${params.toString()}`
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -37,7 +65,8 @@ export async function signUp(formData: FormData) {
       data: {
         first_name: firstName,
         last_name: lastName
-      }
+      },
+      emailRedirectTo: callbackUrl
     }
   })
 
@@ -48,9 +77,27 @@ export async function signUp(formData: FormData) {
   if (data.user) {
     // Create customer record
     await createCustomer(data.user.id)
+    
+    // Link assessment session to user if sessionId provided
+    if (sessionId) {
+      const { data: session } = await supabase
+        .from('assessment_sessions')
+        .select('id')
+        .eq('session_id', sessionId)
+        .single()
+      
+      if (session) {
+        await supabase
+          .from('assessment_responses')
+          .update({ user_id: data.user.id })
+          .eq('session_id', session.id)
+      }
+    }
   }
 
-  redirect("/dashboard")
+  // Only redirect on successful signup
+  // Note: User still needs to verify email before they can access dashboard
+  return { success: true, requiresEmailVerification: true }
 }
 
 export async function signOut() {
@@ -59,13 +106,24 @@ export async function signOut() {
   redirect("/")
 }
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(formData?: FormData) {
   const supabase = await createClient()
+  
+  // Get redirect and session parameters from form data if provided
+  const redirectTo = formData?.get("redirect") as string
+  const sessionId = formData?.get("sessionId") as string
+  
+  // Build the callback URL with parameters
+  let callbackUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/auth/callback`
+  const params = new URLSearchParams()
+  if (redirectTo) params.append('next', redirectTo)
+  if (sessionId) params.append('session', sessionId)
+  if (params.toString()) callbackUrl += `?${params.toString()}`
   
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"}/auth/callback`,
+      redirectTo: callbackUrl,
       queryParams: {
         access_type: "offline",
         prompt: "consent"

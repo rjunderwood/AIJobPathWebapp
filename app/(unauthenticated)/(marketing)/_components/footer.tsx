@@ -152,7 +152,7 @@ export function Footer() {
         </div>
         <div className="border-border mt-16 border-t pt-8 sm:mt-20 lg:mt-24">
           <p className="text-muted-foreground text-xs leading-5">
-            &copy; {new Date().getFullYear()} Company, Inc. All rights reserved.
+            &copy; {new Date().getFullYear()} AIJobPath. All rights reserved.
           </p>
         </div>
       </div>

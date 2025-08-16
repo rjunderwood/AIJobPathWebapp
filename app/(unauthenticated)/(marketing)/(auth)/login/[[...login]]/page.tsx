@@ -23,10 +23,22 @@ function SubmitButton() {
   )
 }
 
-export default function LoginPage() {
+export default function LoginPage({ 
+  searchParams 
+}: { 
+  searchParams: { session?: string; redirect?: string } 
+}) {
   const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(formData: FormData) {
+    // Add redirect info to form data if present
+    if (searchParams.redirect) {
+      formData.append('redirect', searchParams.redirect)
+    }
+    if (searchParams.session) {
+      formData.append('sessionId', searchParams.session)
+    }
+    
     const result = await signIn(formData)
     if (result?.error) {
       setError(result.error)
@@ -245,7 +257,10 @@ export default function LoginPage() {
                 className="inline-block"
               >
                 <Link
-                  href="/signup"
+                  href={`/signup${searchParams.session || searchParams.redirect ? `?${new URLSearchParams({
+                    ...(searchParams.session && { session: searchParams.session }),
+                    ...(searchParams.redirect && { redirect: searchParams.redirect })
+                  }).toString()}` : ''}`}
                   className="text-primary font-medium transition-colors hover:underline"
                 >
                   Start building for free
@@ -273,7 +288,16 @@ export default function LoginPage() {
               }}
             />
             <div className="relative bg-card rounded-lg border p-6">
-              <form action={signInWithGoogle} className="mb-4">
+              <form action={async () => {
+                const formData = new FormData()
+                if (searchParams.redirect) {
+                  formData.append('redirect', searchParams.redirect)
+                }
+                if (searchParams.session) {
+                  formData.append('sessionId', searchParams.session)
+                }
+                await signInWithGoogle(formData)
+              }} className="mb-4">
                 <Button
                   type="submit"
                   variant="outline"

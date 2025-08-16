@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get("code")
   const next = requestUrl.searchParams.get("next") || "/"
+  const sessionId = requestUrl.searchParams.get("session")
 
   if (code) {
     const supabase = await createClient()
@@ -19,6 +20,22 @@ export async function GET(request: NextRequest) {
       // Create customer record for new OAuth users
       if (!existingCustomer) {
         await createCustomer(data.user.id)
+      }
+      
+      // Link assessment session to user if sessionId provided
+      if (sessionId) {
+        const { data: session } = await supabase
+          .from('assessment_sessions')
+          .select('id')
+          .eq('session_id', sessionId)
+          .single()
+        
+        if (session) {
+          await supabase
+            .from('assessment_responses')
+            .update({ user_id: data.user.id })
+            .eq('session_id', session.id)
+        }
       }
     }
   }

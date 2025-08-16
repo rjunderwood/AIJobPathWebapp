@@ -90,7 +90,7 @@ export default function SuccessPage() {
         </div>
         
         <p className="text-sm text-gray-500 mt-8">
-          Having issues? Contact support at support@aijobpath.com
+          Having issues? Contact support at aijobpath@gmail.com
         </p>
       </motion.div>
     </div>

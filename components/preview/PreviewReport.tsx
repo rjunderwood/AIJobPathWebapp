@@ -126,6 +126,7 @@ export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
             content={preview.contentPreview} 
             readingTimeMinutes={preview.readingTimeMinutes}
             estimatedPages={preview.estimatedPages}
+            sessionId={sessionId}
           />
         )}
 
