@@ -23,13 +23,15 @@ export function MarkdownReportDisplay({ content }: MarkdownReportDisplayProps) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl p-8 mb-12 border border-gray-200 shadow-sm"
+      className="bg-white rounded-xl p-8 mb-12 border border-gray-200 shadow-sm relative overflow-hidden"
     >
 
       <h1 className="text-3xl font-bold text-gray-900 mb-6 border-b-2 border-blue-200 pb-3">
-        Your Report
+        Your Report Preview
       </h1>
-      <div className="prose prose-gray max-w-none">
+      <div className="prose prose-gray max-w-none relative">
+        {/* Fade overlay */}
+        <div className="absolute bottom-0 left-0 right-0 h-[48rem] bg-gradient-to-t from-white via-white/95 via-white/70 to-transparent pointer-events-none z-10" />
         <ReactMarkdown
           remarkPlugins={[remarkGfm]}
           components={{
