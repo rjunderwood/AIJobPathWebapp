@@ -122,7 +122,11 @@ export function PreviewReport({ preview, sessionId }: PreviewReportProps) {
 
 
         {preview.contentPreview && (
-          <MarkdownReportDisplay content={preview.contentPreview} />
+          <MarkdownReportDisplay 
+            content={preview.contentPreview} 
+            readingTimeMinutes={preview.readingTimeMinutes}
+            estimatedPages={preview.estimatedPages}
+          />
         )}
 
         {/* New CTA Section */}

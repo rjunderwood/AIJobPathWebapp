@@ -95,12 +95,23 @@ function extractPreviewFromReport(reportData: { content?: string; major?: string
   quickWin: string
   marketInsight: string
   contentPreview: string
+  readingTimeMinutes: number
+  estimatedPages: number
 } {
   try {
     // Handle both old structure (with content) and new structure
     const content = reportData?.content || ""
 
     console.log("Content for preview extraction:", content)
+    
+    // Calculate reading time (average reading speed: 200-250 words per minute)
+    const wordCount = content.split(/\s+/).filter(word => word.length > 0).length
+    const readingTimeMinutes = Math.ceil(wordCount / 225) // Using 225 words per minute as average
+    
+    // Calculate estimated pages (average 250-300 words per page for professional reports)
+    // Using 275 words per page as average for well-formatted reports with headers, tables, etc.
+    const estimatedPages = Math.max(1, Math.ceil(wordCount / 275))
+    
     if (!content) {
       // Return fallback data if no content
       return {
@@ -112,7 +123,9 @@ function extractPreviewFromReport(reportData: { content?: string; major?: string
         quickWin:
           "Complete your assessment to get personalized recommendations",
         marketInsight: "Market analysis is being generated for your major",
-        contentPreview: ""
+        contentPreview: "",
+        readingTimeMinutes: 0,
+        estimatedPages: 0
       }
     }
 
@@ -207,7 +220,9 @@ function extractPreviewFromReport(reportData: { content?: string; major?: string
       topSkillsCount,
       quickWin,
       marketInsight,
-      contentPreview: content.slice(0, Math.floor(content.length * 0.10))
+      contentPreview: content.slice(0, Math.floor(content.length * 0.10)),
+      readingTimeMinutes,
+      estimatedPages
     }
   } catch (error) {
     console.error("Error extracting preview data:", error)
@@ -220,7 +235,9 @@ function extractPreviewFromReport(reportData: { content?: string; major?: string
       topSkillsCount: 3,
       quickWin: "Complete your assessment to get personalized recommendations",
       marketInsight: "Market analysis is being generated for your major",
-      contentPreview: ""
+      contentPreview: "",
+      readingTimeMinutes: 0,
+      estimatedPages: 0
     }
   }
 }

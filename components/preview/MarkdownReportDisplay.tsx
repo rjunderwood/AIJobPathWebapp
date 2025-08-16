@@ -6,9 +6,11 @@ import remarkGfm from "remark-gfm"
 
 interface MarkdownReportDisplayProps {
   content: string
+  readingTimeMinutes?: number
+  estimatedPages?: number
 }
 
-export function MarkdownReportDisplay({ content }: MarkdownReportDisplayProps) {
+export function MarkdownReportDisplay({ content, readingTimeMinutes, estimatedPages }: MarkdownReportDisplayProps) {
   if (!content) {
     return (
       <div className="bg-white rounded-xl p-8 mb-12 border border-gray-200 shadow-sm">
@@ -27,7 +29,18 @@ export function MarkdownReportDisplay({ content }: MarkdownReportDisplayProps) {
     >
 
       <h1 className="text-3xl font-bold text-gray-900 mb-6 border-b-2 border-blue-200 pb-3">
-        Your Report Preview
+        Your Report
+        <span className="ml-3 text-lg font-normal text-gray-500">
+          {readingTimeMinutes && readingTimeMinutes > 0 && estimatedPages && estimatedPages > 0 && (
+            <>({estimatedPages} pages • {readingTimeMinutes} min read)</>
+          )}
+          {readingTimeMinutes && readingTimeMinutes > 0 && (!estimatedPages || estimatedPages === 0) && (
+            <>({readingTimeMinutes} min read)</>
+          )}
+          {estimatedPages && estimatedPages > 0 && (!readingTimeMinutes || readingTimeMinutes === 0) && (
+            <>({estimatedPages} pages)</>
+          )}
+        </span>
       </h1>
       <div className="prose prose-gray max-w-none relative">
         {/* Fade overlay */}

@@ -58,6 +58,8 @@ export interface PreviewData {
   quickWin: string // One actionable item they can do today
   marketInsight: string // Brief market insight about their role
   contentPreview: string // 30% of the report content for preview
+  readingTimeMinutes: number // Estimated reading time for full report
+  estimatedPages: number // Estimated number of pages in full report
 }
 
 export interface FullReport {

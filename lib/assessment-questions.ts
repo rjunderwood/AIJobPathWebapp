@@ -53,7 +53,7 @@ export const assessmentQuestions: AssessmentQuestion[] = [
       "2030"
     ]
   },
-  {
+  { 
     id: "currentSkills",
     type: "multi-select",
     question: "What skills do you already have?",
@@ -72,7 +72,7 @@ export const assessmentQuestions: AssessmentQuestion[] = [
   {
     id: "timeAvailability",
     type: "single-select",
-    question: "How much time can you dedicate to learning?",
+    question: "How much time can you dedicate to learning AI for your career?",
     description: "Be realistic - we'll create a plan that fits your schedule",
     required: true,
     options: [
